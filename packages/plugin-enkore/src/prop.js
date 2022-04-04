@@ -193,7 +193,7 @@ export function parseProp(prop, value, entity) {
 export function parseType(type) {
   if (!types[type]) {
     logger.unmapped("[plugin-wikidata]", "publication type", type)
-    return "book"
+    return null
   }
 
   return types[type]
