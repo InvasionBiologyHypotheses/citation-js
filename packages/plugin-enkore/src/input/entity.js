@@ -1,8 +1,8 @@
-import { logger } from '@citation-js/core'
-import * as response from './response.js'
-import { parseProp, getLabel } from './prop.js'
-import props from './props.json'
-import ignoredProps from './ignoredProps.json'
+import { logger } from "@citation-js/core"
+import * as response from "./response.js"
+import { parseProp, getLabel } from "./prop.js"
+import props from "./props.json" assert { type: "json" }
+import ignoredProps from "./ignoredProps.json" assert { type: "json" }
 
 /**
  * @access private
@@ -12,8 +12,8 @@ import ignoredProps from './ignoredProps.json'
  * @param {Set} unknown
  * @return {Object} statement
  */
-function resolveProp (prop_, entity, unkown) {
-  function resolve ([prop, ...parts], { claims }) {
+function resolveProp(prop_, entity, unkown) {
+  function resolve([prop, ...parts], { claims }) {
     if (!parts.length) {
       return claims[prop]
     } else if (claims[prop] && claims[prop].length) {
@@ -21,7 +21,7 @@ function resolveProp (prop_, entity, unkown) {
     }
   }
 
-  const parts = prop_.split('.')
+  const parts = prop_.split(".")
   unkown.delete(parts[0])
 
   return resolve(parts, entity)
@@ -35,18 +35,15 @@ function resolveProp (prop_, entity, unkown) {
  * @param {Set} unknown
  * @return {module:@citation-js/core~CSL}
  */
-function prepareValue (statement, entity, unkown) {
-  if (typeof statement !== 'object') {
+function prepareValue(statement, entity, unkown) {
+  if (typeof statement !== "object") {
     const value = resolveProp(statement, entity, unkown)
     return value && value[0].value
   }
 
-  const values = [].concat(...statement.props
-    .map(prop => resolveProp(prop, entity, unkown))
-    .filter(Boolean)
-  )
+  const values = [].concat(...statement.props.map((prop) => resolveProp(prop, entity, unkown)).filter(Boolean))
 
-  if (statement.values === 'all') {
+  if (statement.values === "all") {
     return values[0] && values
   } else {
     return values[0] && values[0].value
@@ -59,11 +56,11 @@ function prepareValue (statement, entity, unkown) {
  * @param {Object} entity - The input data
  * @return {module:@citation-js/core~CSL} The formatted input data
  */
-export function parseEntity (entity) {
+export function parseEntity(entity) {
   const data = {
     id: entity.id,
     _wikiId: entity.id,
-    source: 'Wikidata'
+    source: "Wikidata",
   }
 
   const unkown = new Set(Object.keys(entity.claims))
@@ -83,7 +80,7 @@ export function parseEntity (entity) {
       continue
     }
 
-    logger.unmapped('[plugin-wikidata]', 'property', prop)
+    logger.unmapped("[plugin-wikidata]", "property", prop)
   }
 
   if (!data.title) {
@@ -92,10 +89,10 @@ export function parseEntity (entity) {
 
   // BEGIN: Hot-fix some types
 
-  if (data['reviewed-title'] || data['reviewed-author']) {
+  if (data["reviewed-title"] || data["reviewed-author"]) {
     // not all
-    if (data.type.slice(0, 6) !== 'review') {
-      data.type = 'review'
+    if (data.type.slice(0, 6) !== "review") {
+      data.type = "review"
     }
 
     // P921 (main subject) is used for review subjects and keywords
@@ -103,11 +100,11 @@ export function parseEntity (entity) {
   }
 
   if (data.recipient) {
-    data.type = 'personal_communication'
+    data.type = "personal_communication"
   }
 
   if (data.event) {
-    data.type = 'paper-conference'
+    data.type = "paper-conference"
   }
 
   // END
@@ -124,7 +121,7 @@ export function parseEntity (entity) {
  * @param {Object} data - The input data
  * @return {Promise<Array<module:@citation-js/core~CSL>>} The formatted input data
  */
-export async function parseEntitiesAsync ({ entities }) {
+export async function parseEntitiesAsync({ entities }) {
   return (await response.parseAsync(entities)).map(parseEntity)
 }
 
@@ -137,12 +134,8 @@ export async function parseEntitiesAsync ({ entities }) {
  * @param {Object} data - The input data
  * @return {Array<module:@citation-js/core~CSL>} The formatted input data
  */
-export function parseEntities ({ entities }) {
+export function parseEntities({ entities }) {
   return response.parse(entities).map(parseEntity)
 }
 
-export {
-  parseEntities as parse,
-  parseEntitiesAsync as parseAsync,
-  parseEntities as default
-}
+export { parseEntities as parse, parseEntitiesAsync as parseAsync, parseEntities as default }
