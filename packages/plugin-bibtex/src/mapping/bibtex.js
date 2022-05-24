@@ -134,7 +134,7 @@ export default new util.Translator([
   },
   {
     source: LABEL,
-    target: ['id', 'citation-label', 'author', 'issued', 'year-suffix', 'title'],
+    target: ['id', 'citation-key', 'author', 'issued', 'year-suffix', 'title'],
     convert: Converters.LABEL
   },
   {
@@ -154,7 +154,8 @@ export default new util.Translator([
           'article-journal',
           'article-newspaper',
           'article-magazine',
-          'paper-conference'
+          'paper-conference',
+          'periodical'
         ]
       }
     }
@@ -179,11 +180,7 @@ export default new util.Translator([
   {
     source: 'pages',
     target: 'page',
-    convert: {
-      // TODO: multiple ranges
-      toTarget (text) { return text.replace(/[–—]/, '-') },
-      toSource (text) { return text.replace('-', '--') }
-    }
+    convert: Converters.PAGES
   },
   {
     source: 'publisher',
@@ -201,12 +198,17 @@ export default new util.Translator([
           'book',
           'broadcast',
           'chapter',
+          'classic',
+          'collection',
           'dataset',
+          'document',
           'entry',
           'entry-dictionary',
           'entry-encyclopedia',
+          'event',
           'figure',
           'graphic',
+          'hearing',
           'interview',
           'legal_case',
           'legislation',
@@ -215,13 +217,18 @@ export default new util.Translator([
           'musical_score',
           'pamphlet',
           'patent',
+          'performance',
+          'periodical',
           'personal_communication',
           'post',
           'post-weblog',
+          'regulation',
           'review',
           'review-book',
+          'software',
           'song',
           'speech',
+          'standard',
           'treaty',
           'webpage'
         ]
@@ -287,7 +294,8 @@ export default new util.Translator([
     target: ['type', 'genre'],
     convert: {
       toTarget (sourceType, subType) {
-        const type = types.source[sourceType] || 'book'
+        /* istanbul ignore next */
+        const type = types.source[sourceType] || 'document'
 
         if (subType) {
           return [type, subType]

@@ -20,7 +20,9 @@ import types from './types.json'
  * @param {Object} qualifiers
  * @return {Number} series ordinal or -1
  */
-const getSeriesOrdinal = ({ P1545 }) => P1545 ? parseInt(P1545[0]) : -1
+function getSeriesOrdinal ({ P1545 }) {
+  return P1545 ? parseInt(P1545[0]) : null
+}
 
 /**
  * Some name fields have, in addition to a Wikidata ID, a qualifier stating
@@ -31,10 +33,12 @@ const getSeriesOrdinal = ({ P1545 }) => P1545 ? parseInt(P1545[0]) : -1
  * @param {Object} qualifiers
  * @return {Array<String>} names
  */
-const getStatedAs = qualifiers => [].concat(...[
-  qualifiers.P1932,
-  qualifiers.P1810
-].filter(Boolean))
+function getStatedAs (qualifiers) {
+  return [].concat(...[
+    qualifiers.P1932,
+    qualifiers.P1810
+  ].filter(Boolean))
+}
 
 /**
  * Get a single name
@@ -44,13 +48,16 @@ const getStatedAs = qualifiers => [].concat(...[
  * @param {Object} claim - name claim
  * @return {Object} Name object
  */
-const parseName = ({ value, qualifiers }) => {
+function parseName ({ value, qualifiers }) {
   let [name] = getStatedAs(qualifiers)
   if (!name) {
     name = typeof value === 'string' ? value : getLabel(value)
   }
   name = name ? parseNameString(name) : { literal: name }
-  name._ordinal = getSeriesOrdinal(qualifiers)
+  const ordinal = getSeriesOrdinal(qualifiers)
+  if (ordinal !== null) {
+    name._ordinal = ordinal
+  }
   return name
 }
 
@@ -62,7 +69,7 @@ const parseName = ({ value, qualifiers }) => {
  * @param {Array<Object>} values
  * @return {Array<Object>} Array with name objects
  */
-const parseNames = (values) => {
+function parseNames (values) {
   return values
     .map(parseName)
     .sort((a, b) => a._ordinal - b._ordinal)
@@ -76,7 +83,7 @@ const parseNames = (values) => {
  * @param {Object} value
  * @return {String} Place name + country
  */
-const getPlace = value => {
+function getPlace (value) {
   const country = value.claims.P17[0].value
   // only short names that are not an instance of (P31) emoji flag seqs. (Q28840786)
   const shortNames = country.claims.P1813.filter(({ qualifiers: { P31 } }) => !P31 || P31[0] !== 'Q28840786')
@@ -91,7 +98,7 @@ const getPlace = value => {
  * @param {Object} value
  * @return {String} Title
  */
-const getTitle = value => {
+function getTitle (value) {
   return value.claims.P1476
     ? value.claims.P1476[0].value
     : getLabel(value)
@@ -105,7 +112,7 @@ const getTitle = value => {
  * @param {Array<Object>} values
  * @return {String} Labels
  */
-const parseKeywords = values => {
+function parseKeywords (values) {
   return values
     .map(({ value }) => getLabel(value))
     .join(',')
@@ -119,12 +126,14 @@ const parseKeywords = values => {
  * @param {Array<Object>} values
  * @return {Array<Array<Number>>} Array of date-parts
  */
-const parseDateRange = dates => ({
-  'date-parts': dates
-    .map(date => parseDate(date.value))
-    .filter(date => date && date['date-parts'])
-    .map(date => date['date-parts'][0])
-})
+function parseDateRange (dates) {
+  return {
+    'date-parts': dates
+      .map(date => parseDate(date.value))
+      .filter(date => date && date['date-parts'])
+      .map(date => date['date-parts'][0])
+  }
+}
 
 /**
  * Transform property and value from Wikidata format to CSL.
@@ -147,15 +156,25 @@ export function parseProp (prop, value, entity) {
       return parseType(value)
 
     case 'author':
-    case 'director':
+    case 'chair':
+    case 'curator':
     case 'container-author':
     case 'collection-editor':
     case 'composer':
+    case 'director':
     case 'editor':
+    case 'executive-producer':
+    case 'guest':
+    case 'host':
     case 'illustrator':
+    case 'narrator':
+    case 'organizer':
     case 'original-author':
+    case 'performer':
+    case 'producer':
     case 'recipient':
     case 'reviewed-author':
+    case 'script-writer':
     case 'translator':
       return parseNames(value)
 
@@ -171,17 +190,19 @@ export function parseProp (prop, value, entity) {
 
     case 'container-title':
     case 'collection-title':
-    case 'event':
+    case 'event-title':
     case 'medium':
     case 'publisher':
     case 'original-publisher':
       return getTitle(value)
 
     case 'event-place':
+    case 'jurisdiction':
     case 'original-publisher-place':
     case 'publisher-place':
       return getPlace(value)
 
+    case 'chapter-number':
     case 'collection-number':
       return getSeriesOrdinal(value[0].qualifiers)
 
@@ -202,7 +223,7 @@ export function parseProp (prop, value, entity) {
 export function parseType (type) {
   if (!types[type]) {
     logger.unmapped('[plugin-wikidata]', 'publication type', type)
-    return 'book'
+    return 'document'
   }
 
   return types[type]

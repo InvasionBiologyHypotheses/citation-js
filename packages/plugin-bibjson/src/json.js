@@ -63,15 +63,13 @@ const typeMap = {
   incollection: 'chapter',
   conference: 'paper-conference',
   inproceedings: 'paper-conference',
+  manual: 'report',
+  misc: 'document',
   online: 'website',
   patent: 'patent',
   phdthesis: 'thesis',
   techreport: 'report',
-  unpublished: 'manuscript',
-
-  // no mapping, fallback
-  manual: undefined,
-  misc: undefined
+  unpublished: 'manuscript'
 }
 
 function quickscrapeSpecificProps () {
@@ -80,7 +78,7 @@ function quickscrapeSpecificProps () {
 
 function generalProps (input) {
   const output = {
-    type: typeMap[input.type] || 'book'
+    type: typeMap[input.type] || 'document'
   }
 
   if (input.title) { output.title = input.title }

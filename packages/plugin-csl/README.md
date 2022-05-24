@@ -4,7 +4,7 @@ Plugin for CSL output for Citation.js. Output generation is done with [`citeproc
 [![NPM version](https://img.shields.io/npm/v/@citation-js/plugin-csl.svg)](https://npmjs.org/package/@citation-js/plugin-csl)
 [![NPM total downloads](https://img.shields.io/npm/dt/@citation-js/plugin-csl.svg)](https://npmcharts.com/compare/@citation-js%2Fplugin-csl?minimal=true)
 ![License](https://img.shields.io/npm/l/@citation-js/plugin-csl.svg)
-![Dependency status](https://david-dm.org/citation-js/citation-js/status.svg?path=packages%2Fplugin-csl)
+![Dependency status](https://img.shields.io/librariesio/release/npm/@citation-js/plugin-csl)
 ---
 
 ## Install
@@ -129,7 +129,7 @@ cite.format('citation', { entry: 'a' })
 It is possible to add different styles and locales.
 
 ```js
-const {Cite, plugins} = require('@citation-js/core')
+const { Cite, plugins } = require('@citation-js/core')
 ```
 
 #### Templates
@@ -140,7 +140,7 @@ Different [CSL Templates](https://github.com/citation-style-language/styles) can
 let templateName = 'custom'
 let template = '<?xml version="1.0" encoding="utf-8"?><style ...>...</style>' // The actual XML file
 
-let config = plugins.config.get('csl')
+let config = plugins.config.get('@csl')
 config.templates.add(templateName, template)
 
 let example = new Cite(...)
@@ -159,7 +159,7 @@ Different [CSL Locales](https://github.com/citation-style-language/locales) can 
 let language = 'en-GB'
 let locale = '<?xml version="1.0" encoding="utf-8"?><locale ...>...</locale>' // The actual XML file
 
-let config = plugins.config.get('csl')
+let config = plugins.config.get('@csl')
 config.locales.add(language, locale)
 
 let example = new Cite(...)
@@ -175,7 +175,7 @@ example.format('bibliography', {
 The configuration object also exposes an internal method to prepare a Citeproc engine with given data and configuration:
 
 ```js
-let config = plugins.config.get('csl')
+let config = plugins.config.get('@csl')
 
 let citeproc = plugins.engine(
   /* data: */ [{ ... }],

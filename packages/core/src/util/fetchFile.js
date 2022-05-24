@@ -1,14 +1,16 @@
 import syncFetch from 'sync-fetch'
-/* global fetch, Headers */
-import 'isomorphic-fetch'
+import fetchPolyfill from 'fetch-ponyfill'
 
 import logger from '../logger.js'
 import pkg from '../../package.json'
 
+const { fetch, Headers } = fetchPolyfill()
+
 // Browser environments have CORS enabled
 const corsEnabled = typeof location !== 'undefined' && typeof document !== 'undefined'
 
-let userAgent = `Citation.js/${pkg.version} Node.js/${process.version}`
+// Do not try to set the user agent in browsers
+let userAgent = corsEnabled ? '' : `Citation.js/${pkg.version} Node.js/${process.version}`
 
 /**
  * @typedef module:@citation-js/core.util.fetchFile~options

@@ -72,9 +72,10 @@ function splitOptions (options) {
 main(program).catch(console.error)
 
 module.exports = main
-async function main (options) {
+async function main (program) {
   process.stdin.setEncoding('utf8')
 
+  const options = program.opts()
   logger.level = options.logLevel
 
   for (const plugin of options.plugins) {
@@ -130,9 +131,9 @@ function parseValue (value) {
     return {
       false: false,
       true: true,
-      undefined: undefined,
+      undefined: undefined, // eslint-disable-line object-shorthand
       null: null,
-      NaN: NaN
+      NaN: NaN // eslint-disable-line object-shorthand
     }[value] || value
   }
 }

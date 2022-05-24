@@ -1,7 +1,7 @@
 import { parse as parseDate } from '@citation-js/date'
 import TYPES from './spec/types.json'
 
-const ISSN_REGEX = /^\d{4}-\d{4}$/
+const ISSN_REGEX = /^\d{4}-\d{3}[0-9Xx]$/
 const DOI_REGEX = /10(?:\.[0-9]{4,})?\/[^\s]*[^\s.,]/
 const CONVERTERS = {
   ANY: {
@@ -43,7 +43,7 @@ const CONVERTERS = {
           case 2:
             return { family, given }
           case 1:
-            if (family.indexOf(' ') > -1) { return { family } }
+            if (family.indexOf(' ') === -1) { return { family } }
             // fall through
           default:
             return { literal: name }

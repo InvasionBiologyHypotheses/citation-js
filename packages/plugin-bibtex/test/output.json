@@ -66,7 +66,7 @@
       }
     ]],
     "label": [[
-      {"id": "b", "citation-label": "foo", "type": "book"},
+      {"id": "b", "citation-key": "foo", "type": "book"},
       {"id": "b", "author": [{"given": "foo"}], "type": "book"},
       {"id": "b", "type": "book"},
       {"id": 123, "type": "book"},
@@ -117,6 +117,16 @@
         }
       ],
       {"format": "object"}
+    ]
+  },
+  "biblatex": {
+    "no type": [
+      [{
+        "id": "Q23571040",
+        "title": "Correlation of the Base Strengths of Amines 1",
+        "author": [{"given": "H. K.", "family": "Hall"}],
+        "issued": {"date-parts": [[1957, 1, 1]]}
+      }]
     ]
   },
   "bibtxt": {

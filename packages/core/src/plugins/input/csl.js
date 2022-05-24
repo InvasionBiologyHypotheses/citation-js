@@ -84,20 +84,34 @@ const entryTypes = {
  */
 const fieldTypes = {
   author: NAME_LIST,
+  chair: NAME_LIST,
   'collection-editor': NAME_LIST,
+  compiler: NAME_LIST,
   composer: NAME_LIST,
   'container-author': NAME_LIST,
+  contributor: NAME_LIST,
+  curator: NAME_LIST,
+  director: NAME_LIST,
   editor: NAME_LIST,
   'editorial-director': NAME_LIST,
-  director: NAME_LIST,
+  'executive-producer': NAME_LIST,
+  guest: NAME_LIST,
+  host: NAME_LIST,
   interviewer: NAME_LIST,
   illustrator: NAME_LIST,
+  narrator: NAME_LIST,
+  organizer: NAME_LIST,
   'original-author': NAME_LIST,
+  performer: NAME_LIST,
+  producer: NAME_LIST,
   'reviewed-author': NAME_LIST,
   recipient: NAME_LIST,
+  'script-writer': NAME_LIST,
+  'series-creator': NAME_LIST,
   translator: NAME_LIST,
 
   accessed: DATE,
+  'available-date': DATE,
   container: DATE,
   'event-date': DATE,
   issued: DATE,
@@ -107,6 +121,7 @@ const fieldTypes = {
   type: TYPE,
 
   categories: 'object', // TODO Array<String>
+  custom: 'object',
 
   id: ['string', 'number'],
   language: 'string',
@@ -115,21 +130,25 @@ const fieldTypes = {
   abstract: 'string',
   annote: 'string',
   archive: 'string',
+  archive_collection: 'string',
   archive_location: 'string',
   'archive-place': 'string',
   authority: 'string',
   'call-number': 'string',
   'chapter-number': 'string',
   'citation-number': 'string',
+  'citation-key': 'string',
   'citation-label': 'string',
   'collection-number': 'string',
   'collection-title': 'string',
   'container-title': 'string',
   'container-title-short': 'string',
   dimensions: 'string',
+  division: 'string',
   DOI: 'string',
   edition: ['string', 'number'],
-  event: 'string',
+  event: 'string', // deprecated
+  'event-title': 'string',
   'event-place': 'string',
   'first-reference-note-number': 'string',
   genre: 'string',
@@ -149,21 +168,28 @@ const fieldTypes = {
   'original-title': 'string',
   page: 'string',
   'page-first': 'string',
+  'part-number': ['string', 'number'],
+  'part-title': 'string',
   PMCID: 'string',
   PMID: 'string',
+  printing: 'string',
   publisher: 'string',
   'publisher-place': 'string',
   references: 'string',
   'reviewed-title': 'string',
+  'reviewed-genre': 'string',
   scale: 'string',
   section: 'string',
   source: 'string',
   status: 'string',
+  supplement: ['string', 'number'],
   title: 'string',
   'title-short': 'string',
   URL: 'string',
   version: 'string',
   volume: ['string', 'number'],
+  'volume-title': 'string',
+  'volume-title-short': 'string',
   'year-suffix': 'string'
 }
 
@@ -178,7 +204,7 @@ const fieldTypes = {
  *
  * @return {Object} returns the (corrected) value if possible, otherwise undefined
  */
-const correctName = function (name, bestGuessConversions) {
+function correctName (name, bestGuessConversions) {
   if (typeof name === 'object' && name !== null && (name.literal || (name.given || name.family))) {
     return name
   } else if (!bestGuessConversions) {
@@ -199,7 +225,7 @@ const correctName = function (name, bestGuessConversions) {
  *
  * @return {Array<Object>|undefined} returns the (corrected) value if possible, otherwise undefined
  */
-const correctNameList = function (nameList, bestGuessConversions) {
+function correctNameList (nameList, bestGuessConversions) {
   if (nameList instanceof Array) {
     const names = nameList.map(name => correctName(name, bestGuessConversions)).filter(Boolean)
     return names.length ? names : undefined
@@ -217,7 +243,7 @@ const correctNameList = function (nameList, bestGuessConversions) {
  *
  * @return {Array<Number>|undefined}
  */
-const correctDateParts = function (dateParts, bestGuessConversions) {
+function correctDateParts (dateParts, bestGuessConversions) {
   if (dateParts.every(part => typeof part === 'number')) {
     return dateParts
   } else if (!bestGuessConversions || dateParts.some(part => isNaN(parseInt(part)))) {
@@ -238,7 +264,7 @@ const correctDateParts = function (dateParts, bestGuessConversions) {
  *
  * @return {Array<Object>|undefined} returns the (corrected) value if possible, otherwise undefined
  */
-const correctDate = function (date, bestGuessConversions) {
+function correctDate (date, bestGuessConversions) {
   const dp = 'date-parts'
 
   if (typeof date !== 'object' || date === null) {
@@ -278,7 +304,7 @@ const correctDate = function (date, bestGuessConversions) {
  *
  * @return {String|undefined} returns the (corrected) value if possible, otherwise undefined
  */
-const correctType = function (type, bestGuessConversions) {
+function correctType (type, bestGuessConversions) {
   // Also anything that can be converted to a string. Taking `language` as a field
   // with similar string constraints, as fields like `title` might take HTML into
   // account in the future.
@@ -305,7 +331,7 @@ const correctType = function (type, bestGuessConversions) {
  *
  * @return {*|undefined} returns the (corrected) value if possible, otherwise undefined
  */
-const correctField = function (fieldName, value, bestGuessConversions) {
+function correctField (fieldName, value, bestGuessConversions) {
   const fieldType = [].concat(fieldTypes[fieldName])
 
   switch (fieldTypes[fieldName]) {
@@ -320,9 +346,7 @@ const correctField = function (fieldName, value, bestGuessConversions) {
       return correctType(value, bestGuessConversions)
   }
 
-  if (/^_/.test(fieldName)) {
-    return value
-  } else if (bestGuessConversions) {
+  if (bestGuessConversions) {
     if (typeof value === 'string' && fieldType.includes('number') && !fieldType.includes('string') && !isNaN(+value)) {
       return parseFloat(value)
     } else if (typeof value === 'number' && fieldType.includes('string') && !fieldType.includes('number')) {
@@ -349,7 +373,7 @@ const correctField = function (fieldName, value, bestGuessConversions) {
  *
  * @return {Array<module:@citation-js/core~CSL>} Array of clean CSL
  */
-const parseCsl = function (data, bestGuessConversions = true) {
+function parseCsl (data, bestGuessConversions = true) {
   return data.map(function (entry) {
     const clean = {}
 

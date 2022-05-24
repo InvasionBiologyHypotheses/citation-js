@@ -47,6 +47,18 @@ const nonSpec = [
     when: {
       target: false
     }
+  },
+  {
+    source: 's2id',
+    target: 'custom',
+    convert: {
+      toTarget (S2ID) {
+        return { S2ID }
+      },
+      toSource ({ S2ID }) {
+        return [S2ID]
+      }
+    }
   }
 ]
 
@@ -161,7 +173,7 @@ export default new util.Translator([
       source: { maintitle: false },
       target: {
         'number-of-volumes': false,
-        type (type) { return !type.startsWith('article') }
+        type (type) { return !type || !type.startsWith('article') }
       }
     },
     convert: Converters.TITLE
@@ -290,7 +302,7 @@ export default new util.Translator([
     convert: {
       toTarget (type, subtype, typeKey) {
         if (!typeKey) {
-          if (type === 'masterthesis') {
+          if (type === 'mastersthesis') {
             typeKey = 'mathesis'
           }
           if (type === 'phdthesis') {
@@ -301,7 +313,7 @@ export default new util.Translator([
           }
         }
 
-        return [types.source[type] || 'book', typeKey || subtype]
+        return [types.source[type] || 'document', typeKey || subtype]
       },
       toSource (type, genre) {
         const sourceType = types.target[type] || 'misc'
@@ -324,12 +336,19 @@ export default new util.Translator([
     target: 'event-place'
   },
   {
-    source: 'eventtitle',
-    target: 'event'
+    source: ['eventtitle', 'eventtitleaddon'],
+    target: 'event-title',
+    convert: Converters.EVENT_TITLE
+  },
+  {
+    source: ['eventtitle', 'eventtitleaddon'],
+    target: 'event',
+    convert: Converters.EVENT_TITLE,
+    when: { source: false, target: { 'event-title': false } }
   },
   {
     source: LABEL,
-    target: ['id', 'citation-label', 'author', 'issued', 'year-suffix', 'title'],
+    target: ['id', 'citation-key', 'author', 'issued', 'year-suffix', 'title'],
     convert: Converters.LABEL
   },
   {
@@ -352,7 +371,13 @@ export default new util.Translator([
         issue (issue) {
           return typeof issue === 'string' && !issue.match(/\d+/)
         },
-        type: ['article', 'article-journal', 'article-newspaper', 'article-magazine']
+        type: [
+          'article',
+          'article-journal',
+          'article-newspaper',
+          'article-magazine',
+          'periodical'
+        ]
       }
     }
   },
@@ -365,7 +390,14 @@ export default new util.Translator([
       },
       target: {
         issue (issue) { return issue && (typeof issue === 'number' || issue.match(/\d+/)) },
-        type: ['article', 'article-journal', 'article-newspaper', 'article-magazine', 'paper-conference']
+        type: [
+          'article',
+          'article-journal',
+          'article-newspaper',
+          'article-magazine',
+          'paper-conference',
+          'periodical'
+        ]
       }
     }
   },
@@ -404,6 +436,11 @@ export default new util.Translator([
   {
     source: 'note',
     target: 'note'
+  },
+  {
+    source: 'eid',
+    target: 'number',
+    when: { target: { type: ['article-journal'] } }
   },
   {
     source: ['isan', 'ismn', 'isrn', 'iswc'],
@@ -446,26 +483,19 @@ export default new util.Translator([
     target: 'original-title'
   },
   {
-    source: ['pages', 'eid'],
+    source: 'pages',
     target: 'page',
-    // TODO multiple page ranges
-    convert: {
-      toTarget (pages, eid) {
-        return eid ? eid.replace(/^e?/i, 'e') : pages.replace(/[–—]/, '-')
-      },
-      toSource (page) {
-        return /^e/i.test(page) ? [page, page] : [page.replace('-', '--')]
-      }
-    }
+    when: { source: { bookpagination: [undefined, 'page'] } },
+    convert: Converters.PAGES
   },
   {
     source: 'pagetotal',
     target: 'number-of-pages'
   },
-  // {
-  //   source: 'part',
-  //   target: 'part-number'
-  // },
+  {
+    source: 'part',
+    target: 'part-number'
+  },
   {
     source: ['eprint', 'eprinttype'],
     target: 'PMID',
@@ -484,8 +514,8 @@ export default new util.Translator([
       source: true,
       target: {
         // All except:
-        //   - institution: thesis, report
-        //   - organization: webpage
+        //   - thesis, report: institution
+        //   - webpage: organization
         type: [
           'article',
           'article-journal',
@@ -495,12 +525,17 @@ export default new util.Translator([
           'book',
           'broadcast',
           'chapter',
+          'classic',
+          'collection',
           'dataset',
+          'document',
           'entry',
           'entry-dictionary',
           'entry-encyclopedia',
+          'event',
           'figure',
           'graphic',
+          'hearing',
           'interview',
           'legal_case',
           'legislation',
@@ -511,14 +546,18 @@ export default new util.Translator([
           'pamphlet',
           'paper-conference',
           'patent',
+          'performance',
+          'periodical',
           'personal_communication',
           'post',
           'post-weblog',
           'regulation',
           'review',
           'review-book',
+          'software',
           'song',
           'speech',
+          'standard',
           'treaty'
         ]
       }
@@ -588,6 +627,11 @@ export default new util.Translator([
     target: 'title-short'
   },
   {
+    source: 'shorttitle',
+    target: 'shortTitle',
+    when: { source: false, target: { 'title-short': false } }
+  },
+  {
     source: ['title', 'subtitle', 'titleaddon'],
     target: 'title',
     convert: Converters.TITLE
@@ -623,10 +667,10 @@ export default new util.Translator([
   {
     source: 'volumes',
     target: 'number-of-volumes'
+  },
+  {
+    source: ['issuetitle', 'issuesubtitle', 'issuetitleaddon'],
+    target: 'volume-title',
+    convert: Converters.TITLE
   }
-  // {
-  //   source: ['issuetitle', 'issuesubtitle', 'issuetitleaddon'],
-  //   target: 'volume-title',
-  //   convert: Converters.TITLE
-  // }
 ])

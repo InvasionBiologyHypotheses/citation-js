@@ -258,6 +258,15 @@ export const Converters = {
       return [id, 'pubmed']
     }
   },
+  EVENT_TITLE: {
+    toTarget (title, addon) {
+      if (addon) { title += ' (' + addon + ')' }
+      return title
+    },
+    toSource (title) {
+      return title.match(/^(.+)(?: \((.+)\))?$/).slice(1, 3)
+    }
+  },
   // (Unconvential) convention of setting
   //     howpublished = {\url{https://example.org/some/page}}
   HOW_PUBLISHED: {
@@ -301,6 +310,11 @@ export const Converters = {
   NAMES: {
     toTarget (list) { return list.map(name.convertToTarget) },
     toSource (list) { return list.map(name.convertToSource) }
+  },
+  // TODO multiple page ranges
+  PAGES: {
+    toTarget (pages) { return pages.replace(/[–—]/, '-') },
+    toSource (pages) { return pages.replace('-', '--') }
   },
   STANDARD_NUMBERS: {
     toTarget (...args) {
